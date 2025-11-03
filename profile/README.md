@@ -13,10 +13,10 @@ Babbly is a Twitter-like social media application developed as a school project 
 However, **the application was fully functional and running** in an Azure Kubernetes cluster during development. The deployment used Neon PostgreSQL (serverless PostgreSQL) instead of Azure Database for PostgreSQL due to cost.
 
 **Key Highlights:**
-- 7 independent microservices with clearly defined boundaries
+- 6 independent microservices with clearly defined boundaries
 - Event-driven architecture using Apache Kafka
 - Polyglot persistence (PostgreSQL, Cassandra)
-- API Gateway pattern with YARP
+- API Gateway pattern with YARP and integrated authentication
 - Auth0 integration for enterprise authentication
 - Container orchestration with Kubernetes
 - Full CI/CD pipeline integration ready
@@ -34,16 +34,16 @@ However, **the application was fully functional and running** in an Azure Kubern
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                      API Gateway                             │
-│                   (YARP/ASP.NET Core)                        │
-└──────┬────────┬────────┬────────┬────────┬─────────────────┘
-       │        │        │        │        │
-       ▼        ▼        ▼        ▼        ▼
-┌──────────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
-│   Auth   │ │ User │ │ Post │ │Comment│ │ Like │
-│ Service  │ │Service│ │Service│ │Service│ │Service│
-└────┬─────┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘
-     │          │        │        │        │
-     └──────────┴────────┴────────┴────────┘
+│            (YARP/ASP.NET Core + Auth0)                       │
+└──────────┬────────┬────────┬────────┬──────────────────────┘
+           │        │        │        │
+           ▼        ▼        ▼        ▼
+     ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+     │ User │ │ Post │ │Comment│ │ Like │
+     │Service│ │Service│ │Service│ │Service│
+     └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘
+        │        │        │        │
+        └────────┴────────┴────────┘
                         │
                         ▼
              ┌───────────────────┐
@@ -86,14 +86,9 @@ However, **the application was fully functional and running** in an Azure Kubern
 **Purpose:** Web interface providing user authentication, post creation, feed viewing, and profile management.
 
 ### [API Gateway](./babbly-api-gateway)
-**Technology:** ASP.NET Core, YARP  
+**Technology:** ASP.NET Core, YARP, Auth0  
 **Port:** 5010  
-**Purpose:** Single entry point for all client requests. Handles routing, authentication, rate limiting, and request aggregation.
-
-### [Auth Service](./babbly-auth-service)
-**Technology:** ASP.NET Core, Auth0  
-**Port:** 5001  
-**Purpose:** Manages authentication via Auth0, validates JWT tokens, and publishes authentication events to Kafka.
+**Purpose:** Single entry point for all client requests. Handles routing, authentication via Auth0, JWT token validation, rate limiting, and request aggregation.
 
 ### [User Service](./babbly-user-service)
 **Technology:** ASP.NET Core, PostgreSQL  
@@ -132,7 +127,6 @@ However, **the application was fully functional and running** in an Azure Kubern
    # Each service is its own repository
    git clone https://github.com/yourusername/babbly-frontend.git
    git clone https://github.com/yourusername/babbly-api-gateway.git
-   git clone https://github.com/yourusername/babbly-auth-service.git
    git clone https://github.com/yourusername/babbly-user-service.git
    git clone https://github.com/yourusername/babbly-post-service.git
    git clone https://github.com/yourusername/babbly-comment-service.git
@@ -172,7 +166,7 @@ However, **the application was fully functional and running** in an Azure Kubern
 
 The docker-compose configuration handles dependencies automatically:
 1. Infrastructure (Zookeeper, Kafka, Cassandra, PostgreSQL)
-2. Backend services (Auth, User, Post, Comment, Like)
+2. Backend services (User, Post, Comment, Like)
 3. API Gateway
 4. Frontend
 
@@ -197,7 +191,7 @@ docker-compose down -v
 
 ### 2. Event-Driven Communication
 - **Kafka Integration**: Asynchronous communication between services
-- **Event Sourcing**: User events flow from Auth Service to User Service
+- **Event Sourcing**: User events flow from API Gateway to User Service
 - **Loose Coupling**: Services react to events without direct dependencies
 - **Topics**: Separate topics for users, posts, comments, and likes
 
@@ -240,17 +234,17 @@ docker-compose down -v
 
 ### Technical Achievements
 
-✅ **Microservices from Scratch**: Designed and implemented 7 independent services with clear boundaries
+✅ **Microservices from Scratch**: Designed and implemented 6 independent services with clear boundaries
 
 ✅ **Polyglot Persistence**: Successfully integrated both SQL and NoSQL databases based on service requirements
 
 ✅ **Event-Driven Architecture**: Implemented Kafka-based event streaming for asynchronous communication
 
-✅ **API Gateway Pattern**: Built a fully functional gateway with routing, auth, and aggregation
+✅ **API Gateway Pattern**: Built a fully functional gateway with integrated authentication, routing, and aggregation
 
 ✅ **Kubernetes Deployment**: Created K8s manifests for production deployment on Minikube
 
-✅ **Enterprise Authentication**: Integrated Auth0 with custom claims forwarding
+✅ **Enterprise Authentication**: Integrated Auth0 directly into the API Gateway with custom claims forwarding
 
 ✅ **Database Migrations**: Implemented EF Core migrations for PostgreSQL schema management
 
